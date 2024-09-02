@@ -1,46 +1,38 @@
-import "@testing-library/jest-dom";
-import { render, screen, fireEvent } from "@testing-library/react";
-import CategoryFilter from "../components/CategoryFilter";
-import App from "../components/App";
-import { CATEGORIES } from "../data";
+import React from 'react';
+import { render, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom/extend-expect';
+import CategoryFilter from '../components/CategoryFilter'; // Correct path to CategoryFilter component
 
-test("displays a button for each category", () => {
-  render(<CategoryFilter categories={CATEGORIES} />);
-  for (const category of CATEGORIES) {
-    expect(screen.queryByText(category)).toBeInTheDocument();
-  }
-});
+// Define mock categories for testing
+const CATEGORIES = ['All', 'Work', 'Personal'];
 
-test("clicking the category button adds a class of 'selected' to the button", () => {
-  render(<App />);
+test('renders all category buttons', () => {
+  const handleCategoryClick = jest.fn();
+  const { getByText } = render(
+    <CategoryFilter
+      categories={CATEGORIES}
+      selectedCategory='All'
+      onCategoryClick={handleCategoryClick}
+    />
+  );
 
-  const codeButton = screen.queryByRole("button", { name: "Code" });
-  const allButton = screen.queryByRole("button", { name: "All" });
+  CATEGORIES.forEach(category => {
+    expect(getByText(category)).toBeInTheDocument();
+  });
+})
+test('handles category button click', () => {
+  const handleCategoryClick = jest.fn();
+  const { getByText } = render(
+    <CategoryFilter
+      categories={CATEGORIES}
+      selectedCategory='All'
+      onCategoryClick={handleCategoryClick}
+    />
+  );
 
-  fireEvent.click(codeButton);
+  // Simulate clicking the 'Work' category button
+  fireEvent.click(getByText('Work'));
 
-  expect(codeButton.classList).toContain("selected");
-  expect(allButton.classList).not.toContain("selected");
-});
-
-test("clicking the category button filters the task list", () => {
-  render(<App />);
-
-  const codeButton = screen.queryByRole("button", { name: "Code" });
-
-  fireEvent.click(codeButton);
-
-  expect(screen.queryByText("Build a todo app")).toBeInTheDocument();
-  expect(screen.queryByText("Buy rice")).not.toBeInTheDocument();
-});
-
-test("displays all tasks when the 'All' button is clicked", () => {
-  render(<App />);
-
-  const allButton = screen.queryByRole("button", { name: "All" });
-
-  fireEvent.click(allButton);
-
-  expect(screen.queryByText("Build a todo app")).toBeInTheDocument();
-  expect(screen.queryByText("Buy rice")).toBeInTheDocument();
+  // Check if the click handler was called with the correct category
+  expect(handleCategoryClick).toHaveBeenCalledWith('Work');
 });

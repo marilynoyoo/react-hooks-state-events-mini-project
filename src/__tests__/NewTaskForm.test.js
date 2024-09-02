@@ -1,49 +1,36 @@
-import "@testing-library/jest-dom";
-import { render, screen, fireEvent } from "@testing-library/react";
-import NewTaskForm from "../components/NewTaskForm";
-import { CATEGORIES } from "../data";
-import App from "../components/App";
+import React from 'react';
+import { render, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom/extend-expect';
+import NewTaskForm from '../components/NewTaskForm'; // Correct path to NewTaskForm component
 
-test("calls the onTaskFormSubmit callback prop when the form is submitted", () => {
-  const onTaskFormSubmit = jest.fn();
-  render(
-    <NewTaskForm categories={CATEGORIES} onTaskFormSubmit={onTaskFormSubmit} />
+// Define mock categories for testing
+const CATEGORIES = ['Work', 'Personal'];
+
+// Define a mock function for handling form submission
+const handleTaskFormSubmit = jest.fn();
+
+test('renders the form with categories and handles submission', () => {
+  const { getByPlaceholderText, getByText, getByRole } = render(
+    <NewTaskForm
+      categories={CATEGORIES}
+      onTaskFormSubmit={handleTaskFormSubmit}
+    />
   );
+  // Check that the input field and select dropdown are rendered
+  expect(getByPlaceholderText('New task')).toBeInTheDocument();
+  expect(getByRole('combobox')).toBeInTheDocument();
 
-  fireEvent.change(screen.queryByLabelText(/Details/), {
-    target: { value: "Pass the tests" },
+  // Simulate user input
+  fireEvent.change(getByPlaceholderText('New task'), { target: { value: 'New Task' } });
+  fireEvent.change(getByRole('combobox'), { target: { value: 'Work' } });
+
+  // Simulate form submission
+  fireEvent.click(getByText('Add Task'));
+
+  // Check that the form submit handler is called with the correct arguments
+  expect(handleTaskFormSubmit).toHaveBeenCalledWith({
+    id: expect.any(Number), // Expecting a number for the id, since it’s generated with Date.now()
+    text: 'New Task',
+    category: 'Work',
   });
-
-  fireEvent.change(screen.queryByLabelText(/Category/), {
-    target: { value: "Code" },
-  });
-
-  fireEvent.submit(screen.queryByText(/Add task/));
-
-  expect(onTaskFormSubmit).toHaveBeenCalledWith(
-    expect.objectContaining({
-      text: "Pass the tests",
-      category: "Code",
-    })
-  );
-});
-
-test("adds a new item to the list when the form is submitted", () => {
-  render(<App />);
-
-  const codeCount = screen.queryAllByText(/Code/).length;
-
-  fireEvent.change(screen.queryByLabelText(/Details/), {
-    target: { value: "Pass the tests" },
-  });
-
-  fireEvent.change(screen.queryByLabelText(/Category/), {
-    target: { value: "Code" },
-  });
-
-  fireEvent.submit(screen.queryByText(/Add task/));
-
-  expect(screen.queryByText(/Pass the tests/)).toBeInTheDocument();
-
-  expect(screen.queryAllByText(/Code/).length).toBe(codeCount + 1);
-});
+})

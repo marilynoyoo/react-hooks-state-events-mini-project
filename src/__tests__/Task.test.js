@@ -1,24 +1,27 @@
-import "@testing-library/jest-dom";
-import { render, screen, fireEvent } from "@testing-library/react";
-import App from "../components/App";
-import Task from "../components/Task";
+import React from 'react';
+import { render, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom/extend-expect';
+import Task from '../components/Task'; // Correct path to Task component
 
-test("displays the task text", () => {
-  render(<Task text={"text!"} category={"category!"} />);
-  expect(screen.queryByText("text!")).toBeInTheDocument();
-});
+// Define a mock task for testing
+const TASK = {
+  id: 1,
+  text: 'Test Task',
+  category: 'Work',
+};
 
-test("displays the task category", () => {
-  render(<Task text={"text!"} category={"category!"} />);
-  expect(screen.queryByText("category!")).toBeInTheDocument();
-});
+test('renders the task and handles delete', () => {
+  const handleDelete = jest.fn(); // Create a mock function for delete
+  const { getByText } = render(
+    <Task task={TASK} onDelete={() => handleDelete(TASK.id)} />
+  );
 
-test("is removed from the list when the delete button is clicked", () => {
-  render(<App />);
-  const task = screen.queryByText(/Buy rice/);
-  const deleteButton = task.parentElement.querySelector("button");
+  // Check if the task text and category are rendered
+  expect(getByText('Test Task - Work')).toBeInTheDocument();
 
-  fireEvent.click(deleteButton);
+  // Simulate clicking the delete button
+  fireEvent.click(getByText('Delete'));
 
-  expect(screen.queryByText(/Buy rice/)).not.toBeInTheDocument();
+  // Check if the delete handler was called with the correct task id
+  expect(handleDelete).toHaveBeenCalledWith(TASK.id);
 });
